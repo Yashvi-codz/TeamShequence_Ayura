@@ -103,7 +103,108 @@ export default function Dashboard() {
           <button className="btn-primary px-8 py-4">📊 Log Today's Metrics</button>
         </div>
 
-        {/* Recommended Meals */}
+       {/* Check this out! */}
+<div className="mt-10 mb-20">
+  <h3 className="text-2xl font-bold mb-6 text-dark-text">Check this out!</h3>
+
+  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+
+    {/* Card 1 */}
+    <div className="text-center">
+      <div className="rounded-3xl overflow-hidden shadow-lg bg-green-100 p-8 hover:shadow-xl transition">
+        <Link href="/app/pantry">
+        <h3 className="text-2xl font-semibold text-orange-900">
+          Log Your Pantry
+        </h3>
+        </Link>
+      </div>
+    </div>
+
+    {/* Card 2 */}
+    <div className="text-center">
+      <div className="rounded-3xl overflow-hidden shadow-lg bg-orange-100 p-8 hover:shadow-xl transition">
+        <Link href="/app/meals">
+        <h3 className="text-2xl font-semibold text-orange-900">
+          Meal Generator
+        </h3>
+        </Link>
+      </div>
+    </div>
+
+    {/* Card 3 */}
+    <div className="text-center">
+      <div className="rounded-3xl overflow-hidden shadow-lg bg-purple-100 p-8 hover:shadow-xl transition">
+        <Link href="/app/food-checker">
+        <h3 className="text-2xl font-semibold text-orange-900">
+          Food Compatibility 
+        </h3>
+        </Link>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+
+{/* Ayurveda Tips Section */}
+<div className="mt-10 mb-20">
+  <h3 className="text-2xl font-bold mb-6 text-dark-text">Ayurveda Tips</h3>
+
+  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+
+    {/* Card 1 */}
+    <div className="text-center">
+      <div className="rounded-3xl overflow-hidden shadow-lg">
+        <img
+          src="/img/3-doshas.jpeg"
+          alt="Three Doshas"
+          className="w-full h-64 object-cover"
+        />
+        <h3 className="text-2xl mt-4 font-semibold">
+        The Three Doshas
+      </h3>
+      </div>
+      
+    </div>
+
+    {/* Card 2 */}
+    <div className="text-center">
+      <div className="rounded-3xl overflow-hidden shadow-lg">
+        <img
+          src="/img/mindful-eating.jpeg"
+          alt="Mindful Eating"
+          className="w-full h-64 object-cover"
+        />
+        <h3 className="text-2xl mt-4 font-semibold">
+        Mindful Eating
+      </h3>
+      </div>
+      
+    </div>
+
+    {/* Card 3 */}
+    <div className="text-center">
+      <div className="rounded-3xl overflow-hidden shadow-lg">
+        <img
+          src="/img/lifestyle-guidance.jpeg"
+          alt="Lifestyle Guidance"
+          className="w-full h-64 object-cover"
+        />
+        <h3 className="text-2xl mt-4 font-semibold">
+        Lifestyle Guidance
+      </h3>
+      </div>
+      
+    </div>
+
+  </div>
+</div>
+
+
+
+
+        {/* Ayurvedic Tips */}
         <div>
           <h3 className="text-2xl font-bold mb-6 text-dark-text">Today's Recommended Meals</h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -119,21 +220,6 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Ayurvedic Tips */}
-        <div>
-          <h3 className="text-2xl font-bold mb-6 text-dark-text">Ayurvedic Tips</h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {sampleMeals.map((meal,idx)=>(
-              <div key={idx} className="card hover:shadow-xl transition-shadow">
-                <div className="h-32 bg-gradient-to-br rounded-lg mb-4 flex items-center justify-center text-6xl" style={{background:`linear-gradient(135deg, ${info.color}40, ${info.color}20)`}}>🍽️</div>
-                <div className="text-xs font-semibold text-primary mb-2 uppercase">{meal.time}</div>
-                <h4 className="font-bold text-lg mb-2 text-dark-text">{meal.name}</h4>
-                <p className="text-gray-text text-sm mb-4">{meal.desc}</p>
-                <button className="text-primary font-semibold hover:underline">View Recipe →</button>
-              </div>
-            ))}
-          </div>
-        </div>
       </div>
 
 
@@ -145,8 +231,6 @@ export default function Dashboard() {
         <div className="max-w-7xl mx-auto flex justify-around">
           {[
             {icon:'🏠',label:'Home',href:'/app/dashboard',active:true},
-            {icon:'🍽️',label:'Meals',href:'/app/meals'},
-            {icon:'🍽️',label:'Food compatibility',href:'/app/food-checker'},
             {icon:'📊',label:'Logs',href:'/app/logs'},
             {icon:'💬',label:'Chat',href:'/app/chat'},
             {icon:'📚',label:'Learn',href:'/app/learn'},
