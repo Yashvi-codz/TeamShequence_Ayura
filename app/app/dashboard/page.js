@@ -99,8 +99,12 @@ export default function Dashboard() {
         </div>
 
         {/* Quick Action */}
-        <div className="mb-8 text-center">
-          <button className="btn-primary px-8 py-4">📊 Log Today's Metrics</button>
+        <div className="mb-20 text-center mt-20 ">
+          <i><h1 style={{ fontSize: "25px", fontWeight: "medium" }}>
+  "If your diet is WRONG, medicine is of no use! If your diet is CORRECT, medicine is of no need!""
+</h1></i>
+
+
         </div>
 
        {/* Check this out! */}
@@ -108,40 +112,50 @@ export default function Dashboard() {
   <h3 className="text-2xl font-bold mb-6 text-dark-text">Check this out!</h3>
 
   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
-
-    {/* Card 1 */}
+    {/* Card 1 - Log Your Pantry */}
     <div className="text-center">
-      <div className="rounded-3xl overflow-hidden shadow-lg bg-green-100 p-8 hover:shadow-xl transition">
+      <div className="rounded-3xl overflow-hidden shadow-lg bg-green-100 p-8 hover:shadow-xl transition border-4 border-green-500 hover:border-green-600">
         <Link href="/app/pantry">
-        <h3 className="text-2xl font-semibold text-orange-900">
-          Log Your Pantry
-        </h3>
+          <div className="flex flex-col items-center">
+            <span className="text-5xl mb-4">🥘</span>
+            <h3 className="text-2xl font-semibold text-orange-900">
+              Log Your Pantry
+            </h3>
+            <p className="text-sm text-orange-700 mt-2">Manage your ingredients</p>
+          </div>
         </Link>
       </div>
     </div>
 
-    {/* Card 2 */}
+    {/* Card 2 - Meal Generator */}
     <div className="text-center">
-      <div className="rounded-3xl overflow-hidden shadow-lg bg-orange-100 p-8 hover:shadow-xl transition">
+      <div className="rounded-3xl overflow-hidden shadow-lg bg-orange-100 p-8 hover:shadow-xl transition border-4 border-orange-500 hover:border-orange-600">
         <Link href="/app/meals">
-        <h3 className="text-2xl font-semibold text-orange-900">
-          Meal Generator
-        </h3>
+          <div className="flex flex-col items-center">
+            <span className="text-5xl mb-4">🍽️</span>
+            <h3 className="text-2xl font-semibold text-orange-900">
+              Meal Generator
+            </h3>
+            <p className="text-sm text-orange-700 mt-2">Personalized recipes</p>
+          </div>
         </Link>
       </div>
     </div>
 
-    {/* Card 3 */}
+    {/* Card 3 - Food Compatibility */}
     <div className="text-center">
-      <div className="rounded-3xl overflow-hidden shadow-lg bg-purple-100 p-8 hover:shadow-xl transition">
+      <div className="rounded-3xl overflow-hidden shadow-lg bg-purple-100 p-8 hover:shadow-xl transition border-4 border-purple-500 hover:border-purple-600">
         <Link href="/app/food-checker">
-        <h3 className="text-2xl font-semibold text-orange-900">
-          Food Compatibility 
-        </h3>
+          <div className="flex flex-col items-center">
+            <span className="text-5xl mb-4">🔍</span>
+            <h3 className="text-2xl font-semibold text-orange-900">
+              Food Compatibility
+            </h3>
+            <p className="text-sm text-orange-700 mt-2">Check food pairings</p>
+          </div>
         </Link>
       </div>
     </div>
-
   </div>
 </div>
 
@@ -155,9 +169,9 @@ export default function Dashboard() {
 
     {/* Card 1 */}
     <div className="text-center">
-      <div className="rounded-3xl overflow-hidden shadow-lg">
+      <div className="rounded-3xl overflow-hidden shadow-lg pb-5">
         <img
-          src="/img/3-doshas.jpeg"
+          src="/img/3 doshas.jpeg"
           alt="Three Doshas"
           className="w-full h-64 object-cover"
         />
@@ -170,9 +184,9 @@ export default function Dashboard() {
 
     {/* Card 2 */}
     <div className="text-center">
-      <div className="rounded-3xl overflow-hidden shadow-lg">
+      <div className="rounded-3xl overflow-hidden shadow-lg pb-5">
         <img
-          src="/img/mindful-eating.jpeg"
+          src="/img/mindful eating.jpeg"
           alt="Mindful Eating"
           className="w-full h-64 object-cover"
         />
@@ -185,9 +199,9 @@ export default function Dashboard() {
 
     {/* Card 3 */}
     <div className="text-center">
-      <div className="rounded-3xl overflow-hidden shadow-lg">
+      <div className="rounded-3xl overflow-hidden shadow-lg pb-5">
         <img
-          src="/img/lifestyle-guidance.jpeg"
+          src="/img/lifestyle guidance.jpeg"
           alt="Lifestyle Guidance"
           className="w-full h-64 object-cover"
         />

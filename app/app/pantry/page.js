@@ -1,481 +1,312 @@
 'use client';
+
 import { useState, useEffect } from 'react';
 import Cookies from 'js-cookie';
-import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import PantryItems from '@/components/pantry/PantryItems';
+import RecipeResults from '@/components/pantry/RecipeResults';
+import SuggestedIngredients from '@/components/pantry/SuggestedIngredients';
+import PantryStats from '@/components/pantry/PantryStats';
 
-export default function RecipeGeneratorPage() {
+export default function PantryPage() {
+  const router = useRouter();
   const [pantryItems, setPantryItems] = useState([]);
-  const [showAddModal, setShowAddModal] = useState(false);
-  const [editingItem, setEditingItem] = useState(null);
-  const [formData, setFormData] = useState({
-    itemName: '',
-    quantity: '',
-    unit: 'kg',
-    expiryDate: '',
-    category: 'vegetables'
-  });
-  const [generatedRecipe, setGeneratedRecipe] = useState(null);
+  const [newItem, setNewItem] = useState('');
   const [loading, setLoading] = useState(false);
-  const [user, setUser] = useState(null);
-  const [doshaResult, setDoshaResult] = useState(null);
+  const [matchedRecipes, setMatchedRecipes] = useState(null);
+  const [error, setError] = useState('');
+  const [searching, setSearching] = useState(false);
+  const [activeTab, setActiveTab] = useState('manage'); // manage | results
 
+  // Verify token on mount
   useEffect(() => {
-    loadUserData();
-    loadPantryItems();
-  }, []);
-
-  const loadUserData = () => {
-    const userData = JSON.parse(localStorage.getItem('user') || '{}');
-    const doshaData = JSON.parse(localStorage.getItem('doshaResult') || '{}');
-    setUser(userData);
-    setDoshaResult(doshaData);
-  };
-
-  const loadPantryItems = async () => {
     const token = Cookies.get('token');
-    try {
-      const res = await fetch('/api/pantry/items', {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      const data = await res.json();
-      setPantryItems(data.items || []);
-    } catch (err) {
-      // Load from localStorage as fallback
-      const saved = JSON.parse(localStorage.getItem('pantryItems') || '[]');
-      setPantryItems(saved);
+    if (!token) {
+      router.push('/login');
     }
-  };
+    
+    // Load saved pantry items from localStorage
+    const saved = localStorage.getItem('pantryItems');
+    if (saved) {
+      setPantryItems(JSON.parse(saved));
+    }
+  }, [router]);
 
-  const savePantryToLocalStorage = (items) => {
-    localStorage.setItem('pantryItems', JSON.stringify(items));
-  };
+  // Save pantry items to localStorage
+  useEffect(() => {
+    localStorage.setItem('pantryItems', JSON.stringify(pantryItems));
+  }, [pantryItems]);
 
-  const addItem = async () => {
-    if (!formData.itemName || !formData.quantity) {
-      alert('Please fill in item name and quantity');
+  // Add item to pantry
+  const handleAddItem = (e) => {
+    e.preventDefault();
+    if (newItem.trim() === '') {
+      setError('Please enter an item');
       return;
     }
 
-    const newItem = {
-      _id: Date.now().toString(),
-      ...formData,
-      addedDate: new Date().toISOString()
-    };
-
-    const token = Cookies.get('token');
-    try {
-      await fetch('/api/pantry/items', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify(newItem)
-      });
-    } catch (err) {
-      console.log('API failed, using localStorage');
-    }
-
-    const updatedItems = [...pantryItems, newItem];
-    setPantryItems(updatedItems);
-    savePantryToLocalStorage(updatedItems);
-    
-    setShowAddModal(false);
-    resetForm();
-  };
-
-  const updateItem = () => {
-    const updatedItems = pantryItems.map(item =>
-      item._id === editingItem._id ? { ...editingItem, ...formData } : item
-    );
-    setPantryItems(updatedItems);
-    savePantryToLocalStorage(updatedItems);
-    setEditingItem(null);
-    setShowAddModal(false);
-    resetForm();
-  };
-
-  const deleteItem = (itemId) => {
-    if (!confirm('Remove this item from pantry?')) return;
-    
-    const updatedItems = pantryItems.filter(item => item._id !== itemId);
-    setPantryItems(updatedItems);
-    savePantryToLocalStorage(updatedItems);
-  };
-
-  const clearExpiredItems = () => {
-    const today = new Date().toISOString().split('T')[0];
-    const nonExpired = pantryItems.filter(item => {
-      if (!item.expiryDate) return true;
-      return item.expiryDate >= today;
-    });
-    
-    if (pantryItems.length === nonExpired.length) {
-      alert('No expired items found!');
+    const itemLower = newItem.toLowerCase().trim();
+    if (pantryItems.includes(itemLower)) {
+      setError('Item already in pantry');
+      setNewItem('');
       return;
     }
-    
-    if (confirm(`Remove ${pantryItems.length - nonExpired.length} expired item(s)?`)) {
-      setPantryItems(nonExpired);
-      savePantryToLocalStorage(nonExpired);
+
+    setPantryItems([...pantryItems, itemLower]);
+    setNewItem('');
+    setError('');
+  };
+
+  // Remove item from pantry
+  const handleRemoveItem = (itemToRemove) => {
+    setPantryItems(pantryItems.filter(item => item !== itemToRemove));
+  };
+
+  // Add suggested ingredient
+  const handleAddSuggested = (ingredient) => {
+    if (!pantryItems.includes(ingredient)) {
+      setPantryItems([...pantryItems, ingredient]);
     }
   };
 
-  const openEditModal = (item) => {
-    setEditingItem(item);
-    setFormData({
-      itemName: item.itemName,
-      quantity: item.quantity,
-      unit: item.unit,
-      expiryDate: item.expiryDate || '',
-      category: item.category
-    });
-    setShowAddModal(true);
-  };
-
-  const resetForm = () => {
-    setFormData({
-      itemName: '',
-      quantity: '',
-      unit: 'kg',
-      expiryDate: '',
-      category: 'vegetables'
-    });
-    setEditingItem(null);
-  };
-
-  const generateRecipe = async () => {
+  // Generate recipes based on pantry items
+  const handleGenerateRecipes = async () => {
     if (pantryItems.length === 0) {
-      alert('Add items to your pantry first!');
+      setError('Please add items to your pantry first');
       return;
     }
 
-    setLoading(true);
-    const token = Cookies.get('token');
-    
+    setSearching(true);
+    setError('');
+    setMatchedRecipes(null);
+    setActiveTab('results');
+
     try {
-      const res = await fetch('/api/recipes/generate', {
+      // Call backend API
+      const response = await fetch('/api/recipes/match', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        }
+          'Authorization': `Bearer ${Cookies.get('token')}`,
+        },
+        body: JSON.stringify({ pantryItems }),
       });
-      
-      const data = await res.json();
-      setGeneratedRecipe(data.recipe);
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to fetch recipes');
+      }
+
+      if (!data.recipes || data.recipes.length === 0) {
+        setError('No recipes found with your pantry items. Try adding more items!');
+        setMatchedRecipes({
+          recipes: [],
+          matchedRecipes: [],
+          totalRecipes: 0
+        });
+      } else {
+        setMatchedRecipes(data);
+      }
     } catch (err) {
-      console.error(err);
-      alert('Failed to generate recipe. Please try again.');
+      console.error('Error fetching recipes:', err);
+      setError(`Failed to fetch recipes: ${err.message}`);
+      setMatchedRecipes(null);
+      setActiveTab('manage');
     } finally {
-      setLoading(false);
+      setSearching(false);
     }
   };
 
-  const saveRecipe = () => {
-    if (!generatedRecipe) return;
-    
-    const savedRecipes = JSON.parse(localStorage.getItem('savedRecipes') || '[]');
-    savedRecipes.push({
-      ...generatedRecipe,
-      savedAt: new Date().toISOString()
-    });
-    localStorage.setItem('savedRecipes', JSON.stringify(savedRecipes));
-    alert('Recipe saved successfully! ✅');
+  // Clear all pantry items
+  const handleClearPantry = () => {
+    if (confirm('Are you sure you want to clear all items?')) {
+      setPantryItems([]);
+      setMatchedRecipes(null);
+      setError('');
+    }
   };
-
-  const getExpiryStatus = (expiryDate) => {
-    if (!expiryDate) return null;
-    
-    const today = new Date();
-    const expiry = new Date(expiryDate);
-    const daysUntilExpiry = Math.ceil((expiry - today) / (1000 * 60 * 60 * 24));
-    
-    if (daysUntilExpiry < 0) return 'expired';
-    if (daysUntilExpiry <= 3) return 'expiring-soon';
-    return 'good';
-  };
-
-  const categories = {
-    vegetables: '🥬 Vegetables',
-    grains: '🌾 Grains',
-    spices: '🌶️ Spices',
-    oils: '🫒 Oils',
-    herbs: '🌿 Herbs',
-    dairy: '🥛 Dairy',
-    proteins: '🍖 Proteins',
-    fruits: '🍎 Fruits'
-  };
-
-  const units = ['kg', 'grams', 'liters', 'ml', 'pieces', 'cups', 'tbsp', 'tsp'];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-cream to-primary-light/30 pb-24 px-4 py-8">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="mb-8">
-          <Link href="/app/dashboard" className="text-primary hover:underline mb-4 inline-block">
-            ← Back to Dashboard
-          </Link>
-          <h1 className="text-4xl font-bold text-dark-text mb-2">
-            🍳 Recipe Generator - Cook with What You Have
-          </h1>
-          <p className="text-xl text-gray-text">
-            Generate dosha-aligned recipes from your pantry ingredients
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Section A: Pantry Management */}
-          <div className="card">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold text-dark-text">📦 Manage Your Pantry</h2>
-              <div className="flex gap-2">
-                {pantryItems.some(item => getExpiryStatus(item.expiryDate) === 'expired') && (
-                  <button
-                    onClick={clearExpiredItems}
-                    className="px-3 py-2 text-sm bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors"
-                  >
-                    Clear Expired
-                  </button>
-                )}
-                <button
-                  onClick={() => {
-                    resetForm();
-                    setShowAddModal(true);
-                  }}
-                  className="btn-primary"
-                >
-                  + Add Item
-                </button>
-              </div>
+    <div className="min-h-screen bg-gradient-to-br from-cream to-primary-light/30 pb-24">
+      {/* Header */}
+      <div className="bg-white border-b-2 border-gray-200 py-6 px-4 sticky top-0 z-10">
+        <div className="max-w-6xl mx-auto">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h1 className="text-4xl font-bold text-dark-text">🥘 My Pantry</h1>
+              <p className="text-gray-text">Manage your ingredients and discover recipes</p>
             </div>
-
-            {pantryItems.length === 0 ? (
-              <div className="text-center py-12 bg-gray-50 rounded-lg">
-                <div className="text-6xl mb-4">🛒</div>
-                <p className="text-lg text-gray-text mb-4">Your pantry is empty</p>
-                <p className="text-sm text-gray-text mb-6">
-                  Add ingredients to generate personalized recipes
-                </p>
-                <button
-                  onClick={() => setShowAddModal(true)}
-                  className="btn-primary"
-                >
-                  Add Your First Item
-                </button>
-              </div>
-            ) : (
-              <div className="space-y-3 max-h-[600px] overflow-y-auto">
-                {pantryItems.map(item => {
-                  const expiryStatus = getExpiryStatus(item.expiryDate);
-                  return (
-                    <div
-                      key={item._id}
-                      className={`p-4 rounded-lg border-2 ${
-                        expiryStatus === 'expired'
-                          ? 'bg-red-50 border-red-300'
-                          : expiryStatus === 'expiring-soon'
-                          ? 'bg-yellow-50 border-yellow-300'
-                          : 'bg-white border-gray-200'
-                      }`}
-                    >
-                      <div className="flex justify-between items-start">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-1">
-                            <span className="text-xl">{categories[item.category]?.split(' ')[0]}</span>
-                            <h3 className="font-bold text-lg text-dark-text">{item.itemName}</h3>
-                            {expiryStatus === 'expired' && (
-                              <span className="px-2 py-1 bg-red-600 text-white text-xs rounded-full">
-                                Expired
-                              </span>
-                            )}
-                            {expiryStatus === 'expiring-soon' && (
-                              <span className="px-2 py-1 bg-yellow-600 text-white text-xs rounded-full">
-                                Expiring Soon
-                              </span>
-                            )}
-                          </div>
-                          <div className="text-sm text-gray-text space-y-1">
-                            <p>
-                              <span className="font-semibold">Quantity:</span> {item.quantity} {item.unit}
-                            </p>
-                            <p>
-                              <span className="font-semibold">Category:</span> {categories[item.category]}
-                            </p>
-                            {item.expiryDate && (
-                              <p>
-                                <span className="font-semibold">Expires:</span>{' '}
-                                {new Date(item.expiryDate).toLocaleDateString()}
-                              </p>
-                            )}
-                          </div>
-                        </div>
-                        <div className="flex gap-2">
-                          <button
-                            onClick={() => openEditModal(item)}
-                            className="px-3 py-1 text-sm bg-blue-100 text-blue-700 rounded hover:bg-blue-200 transition-colors"
-                          >
-                            ✏️ Edit
-                          </button>
-                          <button
-                            onClick={() => deleteItem(item._id)}
-                            className="px-3 py-1 text-sm bg-red-100 text-red-700 rounded hover:bg-red-200 transition-colors"
-                          >
-                            🗑️
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-
-            {pantryItems.length > 0 && (
-              <div className="mt-4 p-4 bg-blue-50 rounded-lg border-l-4 border-blue-500">
-                <p className="text-sm text-blue-900">
-                  💡 <span className="font-semibold">Total items:</span> {pantryItems.length} |{' '}
-                  <span className="font-semibold">Expiring soon:</span>{' '}
-                  {pantryItems.filter(i => getExpiryStatus(i.expiryDate) === 'expiring-soon').length}
-                </p>
-              </div>
-            )}
+            <div className="text-right">
+              <div className="text-3xl font-bold text-primary">{pantryItems.length}</div>
+              <p className="text-sm text-gray-text">Items Added</p>
+            </div>
           </div>
 
-          {/* Section B: Recipe Generator */}
-          <div className="card">
-            <h2 className="text-2xl font-bold text-dark-text mb-6">✨ Generate Recipe</h2>
+          {/* Tab Navigation (Mobile) */}
+          <div className="lg:hidden flex gap-2">
+            <button
+              onClick={() => setActiveTab('manage')}
+              className={`px-4 py-2 rounded-lg font-semibold transition-all ${
+                activeTab === 'manage'
+                  ? 'bg-primary text-white'
+                  : 'bg-gray-200 text-dark-text'
+              }`}
+            >
+              Manage Items
+            </button>
+            {matchedRecipes && (
+              <button
+                onClick={() => setActiveTab('results')}
+                className={`px-4 py-2 rounded-lg font-semibold transition-all ${
+                  activeTab === 'results'
+                    ? 'bg-primary text-white'
+                    : 'bg-gray-200 text-dark-text'
+                }`}
+              >
+                Recipes ({matchedRecipes.recipes?.length || 0})
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
 
-            {!generatedRecipe ? (
-              <div className="space-y-6">
-                <div className="p-6 bg-gradient-to-br from-primary/10 to-primary-light/20 rounded-lg">
-                  <h3 className="text-xl font-bold mb-4 text-dark-text">
-                    Let AI Create Your Perfect Meal
-                  </h3>
-                  <ul className="space-y-3 text-sm text-dark-text">
-                    <li className="flex items-start gap-2">
-                      <span className="text-primary text-xl">✓</span>
-                      <span>Uses ingredients from your pantry</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <span className="text-primary text-xl">✓</span>
-                      <span>Aligned with your {doshaResult?.dominant || ''} dosha</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <span className="text-primary text-xl">✓</span>
-                      <span>Considers your health goals</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <span className="text-primary text-xl">✓</span>
-                      <span>Respects dietary restrictions</span>
-                    </li>
-                  </ul>
+      {/* Main Content */}
+      <div className="max-w-6xl mx-auto px-4 py-8">
+        {/* Show Stats when recipes are matched */}
+        {matchedRecipes && <PantryStats pantryItems={pantryItems} matchedRecipes={matchedRecipes.recipes} />}
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Left Column - Add Items (Desktop) or Tab Content */}
+          <div className={`lg:col-span-1 ${activeTab === 'manage' ? '' : 'hidden lg:block'}`}>
+            <div className="card sticky top-24">
+              <h2 className="text-2xl font-bold text-dark-text mb-6">Add Items</h2>
+
+              {/* Add Item Form */}
+              <form onSubmit={handleAddItem} className="mb-6">
+                <div className="flex gap-2 mb-4">
+                  <input
+                    type="text"
+                    value={newItem}
+                    onChange={(e) => setNewItem(e.target.value)}
+                    placeholder="e.g., tomato, rice, chicken"
+                    className="input-field flex-1 lowercase"
+                    autoComplete="off"
+                  />
+                  <button
+                    type="submit"
+                    className="btn-primary px-4 whitespace-nowrap"
+                  >
+                    Add
+                  </button>
                 </div>
+              </form>
 
-                {pantryItems.length > 0 && (
-                  <div>
-                    <h4 className="font-semibold mb-3 text-dark-text">Will use these ingredients:</h4>
-                    <div className="flex flex-wrap gap-2">
-                      {pantryItems.slice(0, 8).map(item => (
-                        <span
-                          key={item._id}
-                          className="px-3 py-1 bg-white border-2 border-primary/30 rounded-full text-sm"
-                        >
-                          {item.itemName}
-                        </span>
-                      ))}
-                      {pantryItems.length > 8 && (
-                        <span className="px-3 py-1 bg-gray-100 rounded-full text-sm text-gray-600">
-                          +{pantryItems.length - 8} more
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                )}
+              {error && (
+                <div className="bg-red-100 text-red-700 px-4 py-3 rounded mb-4 text-sm">
+                  {error}
+                </div>
+              )}
 
+              {/* Pantry Items Display */}
+              <PantryItems items={pantryItems} onRemove={handleRemoveItem} />
+
+              {/* Suggested Ingredients */}
+              <SuggestedIngredients
+                onSelectIngredient={handleAddSuggested}
+                pantryItems={pantryItems}
+              />
+
+              {/* Action Buttons */}
+              <div className="mt-6 space-y-2">
                 <button
-                  onClick={generateRecipe}
-                  disabled={loading || pantryItems.length === 0}
-                  className="btn-primary w-full text-lg py-4 disabled:opacity-50 disabled:cursor-not-allowed"
+                  onClick={handleGenerateRecipes}
+// Continue from: onClick={handleGenerateRecipes}
+
+                  disabled={pantryItems.length === 0 || searching}
+                  className={`w-full py-3 rounded-lg font-semibold transition-all ${
+                    pantryItems.length === 0 || searching
+                      ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                      : 'btn-primary'
+                  }`}
                 >
-                  {loading ? (
-                    <span className="flex items-center justify-center">
-                      <svg className="animate-spin h-5 w-5 mr-3" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"></circle>
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                      </svg>
-                      Creating your recipe...
+                  {searching ? (
+                    <span className="flex items-center justify-center gap-2">
+                      <span className="animate-spin">⏳</span>
+                      Finding Recipes...
                     </span>
                   ) : (
-                    '✨ Generate My Recipe'
+                    '🔍 Generate Recipes'
                   )}
                 </button>
-              </div>
-            ) : (
-              <div className="space-y-6">
-                <div className="p-6 bg-gradient-to-br from-green-50 to-green-100 rounded-lg border-l-4 border-green-500">
-                  <h3 className="text-2xl font-bold text-dark-text mb-2">
-                    {generatedRecipe.name}
-                  </h3>
-                  <div className="flex items-center gap-4 text-sm flex-wrap">
-                    <span className="px-3 py-1 bg-white rounded-full">
-                      ⏱️ {generatedRecipe.prepTime} min
-                    </span>
-                    <span className="px-3 py-1 bg-white rounded-full capitalize">
-                      👨‍🍳 {generatedRecipe.difficulty}
-                    </span>
-                    <span className="px-3 py-1 bg-white rounded-full">
-                      🍽️ {generatedRecipe.servings} servings
-                    </span>
-                  </div>
-                </div>
 
-                <div className="p-4 bg-primary/10 rounded-lg">
-                  <h4 className="font-bold mb-2 text-dark-text">
-                    Perfect for {generatedRecipe.doshaAlignment}
-                  </h4>
-                  <p className="text-sm text-dark-text">{generatedRecipe.doshaExplanation}</p>
-                </div>
-
-                <div>
-                  <h4 className="font-bold mb-3 text-dark-text text-lg">Ingredients:</h4>
-                  <ul className="space-y-2">
-                    {generatedRecipe.ingredients.map((ing, idx) => (
-                      <li key={idx} className="flex items-center gap-2 p-2 bg-gray-50 rounded">
-                        <input type="checkbox" className="w-5 h-5" />
-                        <span>
-                          <span className="font-semibold">{ing.name}</span>: {ing.quantity} {ing.unit}
-                        </span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-
-                <div>
-                  <h4 className="font-bold mb-3 text-dark-text text-lg">Instructions:</h4>
-                  <ol className="space-y-3">
-                    {generatedRecipe.instructions.map((step, idx) => (
-                      <li key={idx} className="flex gap-3">
-                        <span className="flex-shrink-0 w-8 h-8 bg-primary text-white rounded-full flex items-center justify-center font-bold">
-                          {idx + 1}
-                        </span>
-                        <p className="pt-1">{step}</p>
-                      </li>
-                    ))}
-                  </ol>
-                </div>
-
-                <div className="grid grid-cols-2 gap-3">
-                  <button onClick={saveRecipe} className="btn-primary">
-                    💾 Save Recipe
-                  </button>
+                {pantryItems.length > 0 && (
                   <button
-                    onClick={() => setGeneratedRecipe(null)}
-                    className="btn-secondary"
+                    onClick={handleClearPantry}
+                    className="w-full btn-secondary"
                   >
-                    ✨ Generate Another
+                    Clear Pantry
                   </button>
+                )}
+              </div>
+
+              {/* Stats */}
+              <div className="mt-6 pt-6 border-t-2 border-gray-200">
+                <p className="text-sm text-gray-text mb-2">
+                  <span className="font-semibold text-primary">
+                    {pantryItems.length}
+                  </span>{' '}
+                  items in pantry
+                </p>
+                {matchedRecipes && (
+                  <>
+                    <p className="text-sm text-gray-text mb-1">
+                      <span className="font-semibold text-green-600">
+                        {matchedRecipes.recipes?.length || 0}
+                      </span>{' '}
+                      recipes found
+                    </p>
+                    <p className="text-xs text-gray-text">
+                      From <span className="font-semibold">{matchedRecipes.totalRecipes}</span> total recipes
+                    </p>
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Right Column - Recipe Results (Desktop) or Tab Content */}
+          <div className={`lg:col-span-2 ${activeTab === 'results' ? '' : 'hidden lg:block'}`}>
+            {matchedRecipes ? (
+              <>
+                {error && (
+                  <div className="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 rounded mb-6">
+                    <p className="font-semibold">⚠️ {error}</p>
+                  </div>
+                )}
+                <RecipeResults
+                  matchedRecipes={matchedRecipes.recipes}
+                  pantryItems={pantryItems}
+                />
+              </>
+            ) : (
+              <div className="card text-center py-12">
+                <div className="text-6xl mb-4">🍳</div>
+                <h3 className="text-xl font-semibold text-dark-text mb-2">
+                  No Recipes Yet
+                </h3>
+                <p className="text-gray-text mb-6">
+                  Add items to your pantry and click "Generate Recipes" to discover
+                  what you can cook!
+                </p>
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-left">
+                  <p className="text-sm text-blue-900 font-semibold mb-2">💡 Tips:</p>
+                  <ul className="text-sm text-blue-800 space-y-1">
+                    <li>• Add at least 3-5 items for better results</li>
+                    <li>• Include common ingredients like rice, oil, salt</li>
+                    <li>• Add proteins like chicken, fish, or paneer</li>
+                    <li>• Include vegetables for nutritious recipes</li>
+                  </ul>
                 </div>
               </div>
             )}
@@ -483,107 +314,31 @@ export default function RecipeGeneratorPage() {
         </div>
       </div>
 
-      {/* Add/Edit Item Modal */}
-      {showAddModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-2xl p-6 max-w-md w-full max-h-[90vh] overflow-y-auto">
-            <h3 className="text-2xl font-bold mb-6 text-dark-text">
-              {editingItem ? 'Edit Item' : 'Add Item to Pantry'}
-            </h3>
-            
-            <div className="space-y-4">
-              <div>
-                <label className="block font-semibold mb-2 text-dark-text">
-                  Item Name *
-                </label>
-                <input
-                  type="text"
-                  required
-                  className="input-field"
-                  value={formData.itemName}
-                  onChange={(e) => setFormData({ ...formData, itemName: e.target.value })}
-                  placeholder="e.g., Rice, Tomatoes, Turmeric"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block font-semibold mb-2 text-dark-text">
-                    Quantity *
-                  </label>
-                  <input
-                    type="number"
-                    required
-                    min="0"
-                    step="0.1"
-                    className="input-field"
-                    value={formData.quantity}
-                    onChange={(e) => setFormData({ ...formData, quantity: e.target.value })}
-                  />
-                </div>
-                <div>
-                  <label className="block font-semibold mb-2 text-dark-text">Unit *</label>
-                  <select
-                    className="input-field"
-                    value={formData.unit}
-                    onChange={(e) => setFormData({ ...formData, unit: e.target.value })}
-                  >
-                    {units.map(unit => (
-                      <option key={unit} value={unit}>{unit}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              <div>
-                <label className="block font-semibold mb-2 text-dark-text">
-                  Category *
-                </label>
-                <select
-                  className="input-field"
-                  value={formData.category}
-                  onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                >
-                  {Object.entries(categories).map(([key, val]) => (
-                    <option key={key} value={key}>{val}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block font-semibold mb-2 text-dark-text">
-                  Expiry Date (optional)
-                </label>
-                <input
-                  type="date"
-                  className="input-field"
-                  value={formData.expiryDate}
-                  onChange={(e) => setFormData({ ...formData, expiryDate: e.target.value })}
-                  min={new Date().toISOString().split('T')[0]}
-                />
-              </div>
-
-              <div className="flex gap-3 pt-4">
-                <button
-                  onClick={editingItem ? updateItem : addItem}
-                  className="btn-primary flex-1"
-                >
-                  {editingItem ? 'Update Item' : 'Add to Pantry'}
-                </button>
-                <button
-                  onClick={() => {
-                    setShowAddModal(false);
-                    resetForm();
-                  }}
-                  className="btn-secondary flex-1"
-                >
-                  Cancel
-                </button>
-              </div>
-            </div>
-          </div>
+      {/* Bottom Navigation Bar */}
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t-2 border-gray-200 py-3 lg:hidden">
+        <div className="max-w-6xl mx-auto px-4 flex justify-around">
+          <a href="/app/dashboard" className="flex flex-col items-center text-gray-text hover:text-primary">
+            <span className="text-2xl">🏠</span>
+            <span className="text-xs font-semibold">Home</span>
+          </a>
+          <a href="/app/meals" className="flex flex-col items-center text-gray-text hover:text-primary">
+            <span className="text-2xl">🍽️</span>
+            <span className="text-xs font-semibold">Meals</span>
+          </a>
+          <a href="/app/pantry" className="flex flex-col items-center text-primary">
+            <span className="text-2xl">🥘</span>
+            <span className="text-xs font-semibold">Pantry</span>
+          </a>
+          <a href="/app/food-checker" className="flex flex-col items-center text-gray-text hover:text-primary">
+            <span className="text-2xl">🔍</span>
+            <span className="text-xs font-semibold">Checker</span>
+          </a>
+          <a href="/app/profile" className="flex flex-col items-center text-gray-text hover:text-primary">
+            <span className="text-2xl">👤</span>
+            <span className="text-xs font-semibold">Profile</span>
+          </a>
         </div>
-      )}
+      </div>
     </div>
   );
 }
