@@ -76,6 +76,7 @@ export default function CreateProfile() {
       const updatedUser = {
         ...existingUser,
         profileCompleted: true,
+        quizCompleted: true,
       };
 
       localStorage.setItem("user", JSON.stringify(updatedUser));
