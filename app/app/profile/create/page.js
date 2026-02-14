@@ -5,6 +5,7 @@ import Cookies from "js-cookie";
 
 export default function CreateProfile() {
   const router = useRouter();
+
   const [formData, setFormData] = useState({
     age: "",
     gender: "",
@@ -13,11 +14,15 @@ export default function CreateProfile() {
     dietaryRestrictions: "",
     currentHealthIssues: "",
   });
+
   const [loading, setLoading] = useState(false);
 
+  // 🔐 Auth Guard
   useEffect(() => {
     const token = Cookies.get("token");
-    if (!token) router.push("/login");
+    if (!token) {
+      router.replace("/login");
+    }
   }, [router]);
 
   const healthGoalOptions = [
@@ -44,6 +49,10 @@ export default function CreateProfile() {
 
     try {
       const token = Cookies.get("token");
+      if (!token) {
+        router.replace("/login");
+        return;
+      }
 
       const res = await fetch("/api/profile/create", {
         method: "POST",
@@ -54,21 +63,28 @@ export default function CreateProfile() {
         body: JSON.stringify(formData),
       });
 
-      if (res.ok) {
-        const user = JSON.parse(localStorage.getItem("user") || "{}");
+      const data = await res.json();
 
-        localStorage.setItem(
-          "user",
-          JSON.stringify({
-            ...user,
-            quizCompleted: true,
-          }),
-        );
-
-        router.replace("/app/dashboard");
+      if (!res.ok) {
+        alert(data.message || "Failed to save profile");
+        return;
       }
+
+      // ✅ Safely update localStorage
+      const existingUser = JSON.parse(localStorage.getItem("user") || "{}");
+
+      const updatedUser = {
+        ...existingUser,
+        profileCompleted: true,
+      };
+
+      localStorage.setItem("user", JSON.stringify(updatedUser));
+
+      // 🔥 Important: use replace to avoid back navigation issue
+      router.replace("/app/dashboard");
+
     } catch (err) {
-      console.error(err);
+      console.error("Submit error:", err);
     } finally {
       setLoading(false);
     }
@@ -86,6 +102,7 @@ export default function CreateProfile() {
           </p>
 
           <form onSubmit={handleSubmit} className="space-y-6">
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <label className="block text-sm font-semibold mb-2">Age</label>
@@ -101,10 +118,9 @@ export default function CreateProfile() {
                   }
                 />
               </div>
+
               <div>
-                <label className="block text-sm font-semibold mb-2">
-                  Gender
-                </label>
+                <label className="block text-sm font-semibold mb-2">Gender</label>
                 <select
                   className="input-field"
                   required
@@ -139,6 +155,7 @@ export default function CreateProfile() {
               <label className="block text-sm font-semibold mb-3">
                 Health Goals (select all that apply)
               </label>
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 {healthGoalOptions.map((goal) => (
                   <label
@@ -169,7 +186,6 @@ export default function CreateProfile() {
               <textarea
                 className="input-field"
                 rows="3"
-                placeholder="e.g., Vegetarian, no gluten..."
                 value={formData.dietaryRestrictions}
                 onChange={(e) =>
                   setFormData({
@@ -177,7 +193,7 @@ export default function CreateProfile() {
                     dietaryRestrictions: e.target.value,
                   })
                 }
-              ></textarea>
+              />
             </div>
 
             <div>
@@ -187,7 +203,6 @@ export default function CreateProfile() {
               <textarea
                 className="input-field"
                 rows="3"
-                placeholder="e.g., Sensitive digestion, anxiety..."
                 value={formData.currentHealthIssues}
                 onChange={(e) =>
                   setFormData({
@@ -195,7 +210,7 @@ export default function CreateProfile() {
                     currentHealthIssues: e.target.value,
                   })
                 }
-              ></textarea>
+              />
             </div>
 
             <button
@@ -205,9 +220,11 @@ export default function CreateProfile() {
             >
               {loading ? "Saving..." : "Save & Continue to Dashboard"}
             </button>
+
           </form>
         </div>
       </div>
     </div>
   );
 }
+
