@@ -29,7 +29,7 @@ export default function DailyLogsPage() {
   const fetchLogs = async () => {
     const token = Cookies.get('token');
     try {
-      const res = await fetch('/api/logs/create', {
+      const res = await fetch('/api/logs', {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       const data = await res.json();
@@ -42,7 +42,7 @@ export default function DailyLogsPage() {
   const fetchLogForDate = async (date) => {
     const token = Cookies.get('token');
     try {
-      const res = await fetch(`/api/logs/create?date=${date}`, {
+      const res = await fetch(`/api/logs?date=${date}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       const data = await res.json();
@@ -69,7 +69,7 @@ export default function DailyLogsPage() {
     const token = Cookies.get('token');
     
     try {
-      const res = await fetch('/api/logs/create', {
+      const res = await fetch('/api/logs', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

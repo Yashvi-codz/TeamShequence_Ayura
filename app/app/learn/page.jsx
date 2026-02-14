@@ -61,7 +61,7 @@ export default function LearnPage() {
         <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
           {[
             { id: 'doshas', label: 'Dosha Learning' },
-            { id: 'food', label: 'Food Compatibility' },
+            { id: 'food', label: 'Food Compatibility', },
             { id: 'routine', label: 'Daily Routine' },
             { id: 'seasonal', label: 'Seasonal Tips' }
           ].map(tab => (
@@ -119,90 +119,7 @@ export default function LearnPage() {
           </div>
         )}
 
-        {/* Food Compatibility Tab */}
-        {activeTab === 'food' && (
-          <div className="card">
-            <h3 className="text-2xl font-bold mb-6">Food Compatibility Checker</h3>
-            <p className="text-gray-text mb-6">Check if food combinations are compatible in Ayurveda</p>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-              <div>
-                <label className="block font-semibold mb-2">First Food</label>
-                <select
-                  value={foodCheck.food1}
-                  onChange={(e) => setFoodCheck({ ...foodCheck, food1: e.target.value, result: null })}
-                  className="input-field"
-                >
-                  <option value="">Select...</option>
-                  {foodOptions.map(food => (
-                    <option key={food} value={food}>{food.charAt(0).toUpperCase() + food.slice(1)}</option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className="block font-semibold mb-2">Second Food</label>
-                <select
-                  value={foodCheck.food2}
-                  onChange={(e) => setFoodCheck({ ...foodCheck, food2: e.target.value, result: null })}
-                  className="input-field"
-                >
-                  <option value="">Select...</option>
-                  {foodOptions.map(food => (
-                    <option key={food} value={food}>{food.charAt(0).toUpperCase() + food.slice(1)}</option>
-                  ))}
-                </select>
-              </div>
-            </div>
 
-            <button
-              onClick={checkFoodCombo}
-              disabled={!foodCheck.food1 || !foodCheck.food2 || loading}
-              className="btn-primary w-full mb-6"
-            >
-              {loading ? 'Checking...' : 'Check Compatibility'}
-            </button>
-
-            {foodCheck.result && (
-              <div className={`p-6 rounded-lg border-l-4 ${
-                foodCheck.result.compatibility === 'excellent' ? 'bg-green-50 border-green-500' :
-                foodCheck.result.compatibility === 'good' ? 'bg-yellow-50 border-yellow-500' :
-                'bg-red-50 border-red-500'
-              }`}>
-                <div className="flex items-center gap-2 mb-4">
-                  <span className="text-3xl">
-                    {foodCheck.result.compatibility === 'excellent' ? '✅' :
-                     foodCheck.result.compatibility === 'good' ? '⚠️' : '❌'}
-                  </span>
-                  <h4 className="text-2xl font-bold capitalize">{foodCheck.result.compatibility}</h4>
-                </div>
-                <p className="mb-4">{foodCheck.result.explanation}</p>
-                
-                <div className="mb-4">
-                  <h5 className="font-bold mb-2">Dosha Impact:</h5>
-                  <div className="grid grid-cols-3 gap-2">
-                    {Object.entries(foodCheck.result.doshaImpact).map(([dosha, impact]) => (
-                      <div key={dosha} className="text-center p-2 bg-white rounded">
-                        <div className="font-semibold capitalize">{dosha}</div>
-                        <div className="text-sm capitalize">{impact}</div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {foodCheck.result.alternatives && foodCheck.result.alternatives.length > 0 && (
-                  <div>
-                    <h5 className="font-bold mb-2">Alternatives:</h5>
-                    <ul className="list-disc list-inside">
-                      {foodCheck.result.alternatives.map((alt, idx) => (
-                        <li key={idx}>{alt}</li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-        )}
 
         {/* Daily Routine Tab */}
         {activeTab === 'routine' && routine && (

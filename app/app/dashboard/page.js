@@ -118,7 +118,27 @@ export default function Dashboard() {
             ))}
           </div>
         </div>
+
+        {/* Ayurvedic Tips */}
+        <div>
+          <h3 className="text-2xl font-bold mb-6 text-dark-text">Ayurvedic Tips</h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {sampleMeals.map((meal,idx)=>(
+              <div key={idx} className="card hover:shadow-xl transition-shadow">
+                <div className="h-32 bg-gradient-to-br rounded-lg mb-4 flex items-center justify-center text-6xl" style={{background:`linear-gradient(135deg, ${info.color}40, ${info.color}20)`}}>🍽️</div>
+                <div className="text-xs font-semibold text-primary mb-2 uppercase">{meal.time}</div>
+                <h4 className="font-bold text-lg mb-2 text-dark-text">{meal.name}</h4>
+                <p className="text-gray-text text-sm mb-4">{meal.desc}</p>
+                <button className="text-primary font-semibold hover:underline">View Recipe →</button>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
+
+
+
+      
 
       {/* Bottom Navigation */}
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t-2 border-gray-200 py-3">
@@ -126,6 +146,7 @@ export default function Dashboard() {
           {[
             {icon:'🏠',label:'Home',href:'/app/dashboard',active:true},
             {icon:'🍽️',label:'Meals',href:'/app/meals'},
+            {icon:'🍽️',label:'Food compatibility',href:'/app/food-checker'},
             {icon:'📊',label:'Logs',href:'/app/logs'},
             {icon:'💬',label:'Chat',href:'/app/chat'},
             {icon:'📚',label:'Learn',href:'/app/learn'},

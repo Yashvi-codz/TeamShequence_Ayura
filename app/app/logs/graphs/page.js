@@ -20,7 +20,7 @@ export default function GraphsPage() {
     setLoading(true);
     const token = Cookies.get('token');
     try {
-      const res = await fetch(`/api/logs/stats?range=${range}`, {
+      const res = await fetch(`/api/logs?range=${range}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       const result = await res.json();
