@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # 🕉️ Ayura - Personalized Ayurvedic Wellness Platform
 
 A modern Next.js web application that helps users discover their Ayurvedic constitution (Prakriti) and receive personalized wellness recommendations.
@@ -130,3 +131,6 @@ Copyright © 2026 Ayura
 ---
 
 **Start your wellness journey today!** 🕉️✨
+=======
+# TeamShequence_Ayura
+>>>>>>> 5661bfb58a3809a2f474f224acd9755a6196c51a
