@@ -8,11 +8,19 @@ export default function SignupPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-cream to-primary-light/30 flex items-center justify-center px-4 py-12">
-      <div className="max-w-4xl w-full">
+      <div className="card max-w-2xl mx-auto bg-green-300">
         {/* Logo */}
         <div className="text-center mb-8">
           <Link href="/" className="inline-flex items-center space-x-2">
-            <span className="text-5xl">🕉️</span>
+            <span className="text-5xl">
+              <img 
+                src="/img/Logo.jpeg"
+                alt="Ayura Logo"
+                width={64}
+                height={64}
+                className="rounded-lg object-cover relative shadow-md"
+              />
+            </span>
             <span className="text-3xl font-bold text-primary">Ayura</span>
           </Link>
         </div>

@@ -56,18 +56,50 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-cream to-primary-light/30 pb-24">
       {/* Header */}
-      <div className="bg-white border-b-2 border-gray-200 py-4 px-4">
-        <div className="max-w-7xl mx-auto flex justify-between items-center">
-          <div className="flex items-center space-x-3">
-            <span className="text-3xl">🕉️</span>
-            <span className="text-2xl font-bold text-primary">Ayura</span>
+            {/* IMPROVED HEADER - LARGER VERSION */}
+      <header className="sticky top-0 z-50 bg-white/95 border-b-2 border-gray-100 shadow-sm">
+        <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
+          {/* Left: Logo + App Name + Tagline */}
+          <div className="flex items-center space-x-5 hover:opacity-80 transition-opacity cursor-pointer">
+            {/* Logo */}
+            <div className="relative">
+              <div className="absolute inset-0 bg-primary/10 rounded-xl blur-lg"></div>
+              <img 
+                src="/img/Logo.jpeg"
+                alt="Ayura Logo"
+                width={64}
+                height={64}
+                className="rounded-lg object-cover relative shadow-md"
+              />
+            </div>
+            
+            {/* App Name & Tagline */}
+            <div className="border-l-2 border-gray-200 pl-5">
+              <h1 className="text-3xl font-black text-primary">Ayura</h1>
+              <p className="text-sm text-gray-text font-semibold tracking-wide">Wellness Companion</p>
+            </div>
           </div>
-          <div className="flex items-center space-x-4">
-            <span className="text-dark-text font-semibold">Welcome, {user.name}</span>
-            <button onClick={handleLogout} className="text-sm text-gray-text hover:text-dark-text">Logout</button>
+
+          {/* Right: User Info + Logout Button */}
+          <div className="flex items-center space-x-6">
+            {/* User Info */}
+            <div className="hidden sm:block text-right">
+              <p className="text-base font-bold text-dark-text">{user.name}</p>
+              <p className="text-sm text-gray-text">Welcome back!</p>
+            </div>
+
+            {/* Logout Button */}
+            <button 
+              onClick={handleLogout}
+              className="px-6 py-3 rounded-lg bg-green-500 text-white font-semibold hover:shadow-lg active:scale-95 transition-all duration-200 text-base"
+            >
+              Logout
+            </button>
           </div>
         </div>
-      </div>
+      </header>
+
+
 
       <div className="max-w-7xl mx-auto px-4 py-8">
         {/* Dosha Card */}
@@ -101,7 +133,7 @@ export default function Dashboard() {
         {/* Quick Action */}
         <div className="mb-20 text-center mt-20 ">
           <i><h1 style={{ fontSize: "25px", fontWeight: "medium" }}>
-  "If your diet is WRONG, medicine is of no use! If your diet is CORRECT, medicine is of no need!""
+    "If your diet is WRONG, medicine is of no use! If your diet is CORRECT, medicine is of no need!""
 </h1></i>
 
 
@@ -127,16 +159,16 @@ export default function Dashboard() {
       </div>
     </div>
 
-    {/* Card 2 - Meal Generator */}
+    {/* Card 2 - Dosha Score */}
     <div className="text-center">
       <div className="rounded-3xl overflow-hidden shadow-lg bg-orange-100 p-8 hover:shadow-xl transition border-4 border-orange-500 hover:border-orange-600">
-        <Link href="/app/meals">
+        <Link href="/app/dashboard">
           <div className="flex flex-col items-center">
-            <span className="text-5xl mb-4">🍽️</span>
+            <span className="text-5xl mb-4">📈</span>
             <h3 className="text-2xl font-semibold text-orange-900">
-              Meal Generator
+              Dosha Score
             </h3>
-            <p className="text-sm text-orange-700 mt-2">Personalized recipes</p>
+            <p className="text-sm text-orange-700 mt-2">View Your Dosha Score</p>
           </div>
         </Link>
       </div>

@@ -98,7 +98,15 @@ export default function PatientSignup() {
       <div className="max-w-md w-full">
         <div className="text-center mb-6">
           <Link href="/" className="inline-flex items-center space-x-2">
-            <span className="text-4xl">🕉️</span>
+            <span className="text-4xl">
+              <img 
+                src="/img/Logo.jpeg"
+                alt="Ayura Logo"
+                width={64}
+                height={64}
+                className="rounded-lg object-cover relative shadow-md"
+              />
+            </span>
             <span className="text-2xl font-bold text-primary">Ayura</span>
           </Link>
         </div>
